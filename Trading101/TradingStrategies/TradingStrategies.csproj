@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AlphaVantage.Net.Stocks" Version="2.0.1" />
+    <PackageReference Include="AlphaVantage.Net.TechnicalIndicators" Version="2.0.1" />
+    <PackageReference Include="AutoFinance.Broker" Version="1.0.677" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Polly" Version="7.2.1" />
+  </ItemGroup>
+
+</Project>
