@@ -1,4 +1,4 @@
-![build](https://https://github.com/vanlabajo/trading-101/workflows/.net/badge.svg)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vanlabajo/trading-101/.NET)
 
 # trading-101
 A consolidation of what I want to automate when trading
