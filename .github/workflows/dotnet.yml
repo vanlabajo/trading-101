@@ -18,8 +18,8 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Restore dependencies
-      run: dotnet restore TradingStrategies/TradingStrategies.csproj
+      run: dotnet restore Trading101.sln
     - name: Build
-      run: dotnet build TradingStrategies/TradingStrategies.csproj --no-restore
+      run: dotnet build Trading101.sln --no-restore
     - name: Test
       run: dotnet test UnitTests/UnitTests.csproj --no-build --verbosity normal
