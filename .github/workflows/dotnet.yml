@@ -10,6 +10,8 @@ jobs:
   build:
 
     runs-on: ubuntu-18.04
+    env:
+      working-directory: ./Trading101
 
     steps:
     - uses: actions/checkout@v2
@@ -18,8 +20,11 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Restore dependencies
-      run: dotnet restore Trading101/Trading101.sln
+      run: dotnet restore Trading101.sln
+      working-directory: ${{env.working-directory}}
     - name: Build
-      run: dotnet build Trading101/Trading101.sln --no-restore
+      run: dotnet build Trading101.sln --no-restore
+      working-directory: ${{env.working-directory}}
     - name: Test
       run: dotnet test UnitTests/UnitTests.csproj --no-build --verbosity normal
+      working-directory: ${{env.working-directory}}
