@@ -207,7 +207,61 @@ namespace TradingStrategies.Wrappers
         //    return result;
         //}
 
-        public async Task<int> PlaceBracketOrderAsync(string symbol, string entryAction, decimal quantity, decimal entryPrice, decimal stopPrice, decimal targetReward)
+
+        public async Task<int> PlaceBracketOrderAsync(string symbol, string entryAction, decimal quantity, decimal entryPrice, decimal targetReward)
+        {
+            var twsController = twsObjectFactory.TwsController;
+
+            await twsController.EnsureConnectedAsync();
+
+            var contractDetails = await twsController.GetContractAsync(new IBApi.Contract
+            {
+                SecType = TwsContractSecType.Stock,
+                Symbol = symbol,
+                Exchange = TwsExchange.Smart,
+                PrimaryExch = TwsExchange.Island
+            });
+
+            if (contractDetails == null || contractDetails.Count == 0) return 0;
+
+            var contract = contractDetails.First().Contract;
+
+            int entryOrderId = await twsController.GetNextValidIdAsync();
+            var takeProfitOrderId = await twsController.GetNextValidIdAsync();
+
+            var entryOrder = new Order()
+            {
+                Action = entryAction,
+                OrderType = TwsOrderType.Limit,
+                TotalQuantity = Convert.ToDouble(quantity),
+                LmtPrice = Convert.ToDouble(entryPrice),
+                Tif = TwsTimeInForce.GoodTillClose,
+                Transmit = false
+            };
+
+            var takeProfit = new Order()
+            {
+                Action = TwsOrderActions.Reverse(entryAction),
+                OrderType = TwsOrderType.Limit,
+                TotalQuantity = Convert.ToDouble(quantity),
+                LmtPrice = Convert.ToDouble(targetReward),
+                ParentId = entryOrderId,
+                Tif = TwsTimeInForce.GoodTillClose,
+                Transmit = true
+            };
+
+            var entryOrderAckTask = twsController.PlaceOrderAsync(entryOrderId, contract, entryOrder);
+            var takeProfitOrderAckTask = twsController.PlaceOrderAsync(takeProfitOrderId, contract, takeProfit);
+
+            Task.WaitAll(entryOrderAckTask, takeProfitOrderAckTask);
+
+            var result = entryOrderAckTask.Result && takeProfitOrderAckTask.Result;
+
+            if (result) return entryOrderId;
+            else return 0;
+        }
+
+        public async Task<int> PlaceBracketOrderAsync(string symbol, string entryAction, decimal quantity, decimal entryPrice, decimal targetReward, decimal stopPrice)
         {
             var twsController = twsObjectFactory.TwsController;
 

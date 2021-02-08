@@ -45,7 +45,28 @@ namespace IntegrationTests
             var twsObjectFactory = new TwsObjectFactory("localhost", 7497, 1);
             var broker = new TwsBroker(twsAccountId, twsObjectFactory);
 
-            var entryOrderId = await broker.PlaceBracketOrderAsync("MSFT", "BUY", 1m, 238.93m, 238.73m, 239.33m);
+            var entryOrderId = await broker.PlaceBracketOrderAsync("MSFT", "BUY", 1m, 238.93m, 239.33m);
+            Assert.True(entryOrderId > 0);
+
+            Thread.Sleep(1000); // TWS takes some time to put the order in the portfolio. Wait for it.
+
+            var openOrders = await broker.GetOpenOrderIdsAsync("MSFT");
+
+            Assert.True(openOrders.Count == 2);
+
+            var result = await broker.CancelOrderAsync(entryOrderId);
+            Assert.True(result);
+
+            await twsObjectFactory.TwsController.DisconnectAsync();
+        }
+
+        [Fact]
+        public async Task PlaceBracketOrderWithStopLossAsync()
+        {
+            var twsObjectFactory = new TwsObjectFactory("localhost", 7497, 1);
+            var broker = new TwsBroker(twsAccountId, twsObjectFactory);
+
+            var entryOrderId = await broker.PlaceBracketOrderAsync("MSFT", "BUY", 1m, 238.93m, 239.33m, 238.73m);
             Assert.True(entryOrderId > 0);
 
             Thread.Sleep(1000); // TWS takes some time to put the order in the portfolio. Wait for it.
