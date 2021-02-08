@@ -71,7 +71,7 @@ namespace ConsoleApp
                                             var entryOrderId = 0;
                                             try
                                             {
-                                                entryOrderId = await broker.PlaceBracketOrderAsync(stock, "BUY", positionSize.Quantity, entryPrice, stopLoss, positionSize.TargetProfit);
+                                                entryOrderId = await broker.PlaceBracketOrderAsync(stock, "BUY", positionSize.Quantity, entryPrice, positionSize.TargetProfit);
                                             }
                                             catch (Exception) { }
 
