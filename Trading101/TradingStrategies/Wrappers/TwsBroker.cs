@@ -25,67 +25,14 @@ namespace TradingStrategies.Wrappers
 
         public async Task<decimal> GetAvailableFundsAsync(string currency)
         {
-            var twsCallbackHandler = twsObjectFactory.TwsCallbackHandler;
             var twsController = twsObjectFactory.TwsController;
 
             await twsController.EnsureConnectedAsync();
 
-            var requestId = twsController.GetNextRequestId();
-            var accountSummaryDetails = new List<AccountSummaryEventArgs>();
-            var taskSource = new TaskCompletionSource<decimal>();
-            EventHandler<AccountSummaryEventArgs> accountSummaryEvent = null;
-            EventHandler<RequestEndEventArgs> requestEndEvent = null;
-            EventHandler<ErrorEventArgs> errorEventHandler = null;
+            var accountDetails = await twsController.GetAccountDetailsAsync(accountId);
+            if (accountDetails.Count == 0 || !accountDetails.ContainsKey("AvailableFunds")) return 0;
 
-            accountSummaryEvent = (sender, args) =>
-            {
-                accountSummaryDetails.Add(args);
-            };
-
-            requestEndEvent = (sender, args) =>
-            {
-                if (args.RequestId == requestId)
-                {
-                    twsObjectFactory.ClientSocket.CancelAccountSummary(requestId);
-
-                    twsObjectFactory.TwsCallbackHandler.AccountSummaryEvent -= accountSummaryEvent;
-                    twsObjectFactory.TwsCallbackHandler.AccountSummaryEndEvent -= requestEndEvent;
-                    twsObjectFactory.TwsCallbackHandler.ErrorEvent -= errorEventHandler;
-
-                    var availableFunds = accountSummaryDetails.FirstOrDefault(a => a.Account == accountId && a.Currency == currency && a.Tag == "CashBalance");
-                    if (availableFunds != null) taskSource.TrySetResult(decimal.Parse(availableFunds.Value));
-                    else taskSource.TrySetResult(0m);
-                }
-            };
-
-            errorEventHandler = (sender, args) =>
-            {
-                if (args.Id == requestId)
-                {
-                    twsObjectFactory.TwsCallbackHandler.AccountSummaryEvent -= accountSummaryEvent;
-                    twsObjectFactory.TwsCallbackHandler.AccountSummaryEndEvent -= requestEndEvent;
-                    twsObjectFactory.TwsCallbackHandler.ErrorEvent -= errorEventHandler;
-
-                    taskSource.TrySetException(new TwsException(args));
-                }
-            };
-
-            twsObjectFactory.TwsCallbackHandler.AccountSummaryEvent += accountSummaryEvent;
-            twsObjectFactory.TwsCallbackHandler.AccountSummaryEndEvent += requestEndEvent;
-            twsObjectFactory.TwsCallbackHandler.ErrorEvent += errorEventHandler;
-
-            // Set the operation to cancel after 3 minutes
-            CancellationTokenSource tokenSource = new CancellationTokenSource(60 * 3000);
-            tokenSource.Token.Register(() =>
-            {
-                taskSource.TrySetCanceled();
-            });
-
-            twsObjectFactory.ClientSocket.RequestAccountSummary(requestId, "All", $"$LEDGER:{currency}");
-
-            var result = await taskSource.Task;
-
-            return result;
+            return decimal.Parse(accountDetails["AvailableFunds"]);
         }
 
         //public async Task<List<Order>> GetOpenOrdersAsync(string symbol)
