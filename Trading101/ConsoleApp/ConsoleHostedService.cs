@@ -42,11 +42,9 @@ namespace ConsoleApp
                 {
                     try
                     {
-                        var capital = await broker.GetAvailableFundsAsync(Currency.USD);
+                        var capital = await broker.GetAvailableFundsAsync();
+                        if (capital > 500) capital = 500;
                         logger.LogInformation("{0} - available funds in broker account.", capital);
-
-                        capital = 500m;
-                        logger.LogInformation("{0} - faked available funds in broker account.", capital);
 
                         foreach (var stock in appSettings.StockPicks)
                         {
@@ -67,27 +65,15 @@ namespace ConsoleApp
                                         var fundsNeeded = entryPrice * positionSize.Quantity;
                                         if (capital >= fundsNeeded)
                                         {
-                                            var success = false;
-                                            var entryOrderId = 0;
                                             try
                                             {
-                                                entryOrderId = await broker.PlaceBracketOrderAsync(stock, "BUY", positionSize.Quantity, entryPrice, positionSize.TargetProfit);
+                                                await broker.PlaceBracketOrderAsync(stock, "BUY", positionSize.Quantity, entryPrice, positionSize.TargetProfit);
                                             }
                                             catch (Exception) { }
 
-                                            if (entryOrderId > 0) success = true;
-                                            else
-                                            {
-                                                var openOrders = await broker.GetOpenOrderIdsAsync(stock);
-                                                if (openOrders.Count == 3) success = true;
-                                            }
-
-                                            if (success)
-                                            {
-                                                logger.LogInformation("{0} - placed LONG bracket order.", stock);
-                                                capital -= fundsNeeded;
-                                                logger.LogInformation("{0} - available funds in broker account.", capital);
-                                            }
+                                            logger.LogInformation("{0} - buying {1} for {2}.", stock, positionSize.Quantity, entryPrice);
+                                            capital -= fundsNeeded;
+                                            logger.LogInformation("{0} - available funds in broker account.", capital);
                                         }
                                         else logger.LogError("{0} available funds is less than the needed {1}", capital, fundsNeeded);
                                     }

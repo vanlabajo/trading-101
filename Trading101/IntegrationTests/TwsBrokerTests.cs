@@ -32,7 +32,7 @@ namespace IntegrationTests
             var twsObjectFactory = new TwsObjectFactory("localhost", 7497, 1);
             var broker = new TwsBroker(twsAccountId, twsObjectFactory);
 
-            var availableFunds = await broker.GetAvailableFundsAsync(Currency.USD);
+            var availableFunds = await broker.GetAvailableFundsAsync();
 
             Assert.True(availableFunds > 0);
 

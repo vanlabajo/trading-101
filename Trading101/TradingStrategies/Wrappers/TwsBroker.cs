@@ -23,16 +23,16 @@ namespace TradingStrategies.Wrappers
             this.twsObjectFactory = twsObjectFactory;
         }
 
-        public async Task<decimal> GetAvailableFundsAsync(string currency)
+        public async Task<decimal> GetAvailableFundsAsync()
         {
             var twsController = twsObjectFactory.TwsController;
 
             await twsController.EnsureConnectedAsync();
 
             var accountDetails = await twsController.GetAccountDetailsAsync(accountId);
-            if (accountDetails.Count == 0 || !accountDetails.ContainsKey("AvailableFunds")) return 0;
+            if (accountDetails.IsEmpty || !accountDetails.ContainsKey("CashBalance")) return 0;
 
-            return decimal.Parse(accountDetails["AvailableFunds"]);
+            return decimal.Parse(accountDetails["CashBalance"]);
         }
 
         //public async Task<List<Order>> GetOpenOrdersAsync(string symbol)
