@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TradingStrategies;
+using TradingStrategies.Constants;
 
 namespace ConsoleApp
 {
@@ -43,7 +44,7 @@ namespace ConsoleApp
                     {
                         var capital = await broker.GetAvailableFundsAsync();
                         if (capital > 500) capital = 500;
-                        logger.LogInformation($"{capital} - available funds in broker account.");
+                        logger.LogInformation("{0} - available funds in broker account.", capital);
 
                         foreach (var stock in appSettings.StockPicks)
                         {
@@ -70,20 +71,22 @@ namespace ConsoleApp
                                             }
                                             catch (Exception) { }
 
-                                            logger.LogInformation($"{stock} - buying {positionSize.Quantity} for {entryPrice}.");
+                                            logger.LogInformation("{0} - buying {1} for {2}.", stock, positionSize.Quantity, entryPrice);
+                                            capital -= fundsNeeded;
+                                            logger.LogInformation("{0} - available funds in broker account.", capital);
                                         }
-                                        else logger.LogError($"{capital} available funds is less than the needed {fundsNeeded}");
+                                        else logger.LogError("{0} available funds is less than the needed {1}", capital, fundsNeeded);
                                     }
                                 }
                             }
                             catch (AggregateException ae)
                             {
                                 foreach (var ex in ae.InnerExceptions)
-                                    logger.LogError($"{ex.GetType().Name}: {ex.Message}");
+                                    logger.LogError("{0}: {1}", ex.GetType().Name, ex.Message);
                             }
                             catch (Exception ex)
                             {
-                                logger.LogError($"{ex.GetType().Name}: {ex.Message}");
+                                logger.LogError("{0}: {1}", ex.GetType().Name, ex.Message);
                             }
                         }
                     }
