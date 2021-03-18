@@ -10,5 +10,7 @@ namespace TradingStrategies
         Task<int> PlaceBracketOrderAsync(string symbol, string entryAction, decimal quantity, decimal entryPrice, decimal targetReward, decimal stopPrice);
         Task<List<int>> GetOpenOrderIdsAsync(string symbol);
         Task<bool> CancelOrderAsync(int orderId);
+        Task<decimal> GetClosePriceAsync(string symbol);
+        Task<decimal> GetLastPriceAsync(string symbol);
     }
 }

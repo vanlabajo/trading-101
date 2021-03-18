@@ -1,5 +1,10 @@
 ﻿using AutoFinance.Broker.InteractiveBrokers;
+using AutoFinance.Broker.InteractiveBrokers.Constants;
+using AutoFinance.Broker.InteractiveBrokers.EventArgs;
+using IBApi;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TradingStrategies.Constants;
@@ -79,6 +84,32 @@ namespace IntegrationTests
             Assert.True(result);
 
             await twsObjectFactory.TwsController.DisconnectAsync();
+        }
+
+        [Fact]
+        public async Task GetClosePriceAsync()
+        {
+            var twsObjectFactory = new TwsObjectFactory("localhost", 7497, 1);
+            var broker = new TwsBroker(twsAccountId, twsObjectFactory);
+
+            var price = await broker.GetClosePriceAsync("MSFT");
+
+            Thread.Sleep(1000); // TWS takes some time. Wait for it.
+
+            Assert.True(price > 0);
+        }
+
+        [Fact]
+        public async Task GetLastPriceAsync()
+        {
+            var twsObjectFactory = new TwsObjectFactory("localhost", 7497, 1);
+            var broker = new TwsBroker(twsAccountId, twsObjectFactory);
+
+            var price = await broker.GetLastPriceAsync("MSFT");
+
+            Thread.Sleep(1000); // TWS takes some time. Wait for it.
+
+            Assert.True(price > 0);
         }
     }
 }
