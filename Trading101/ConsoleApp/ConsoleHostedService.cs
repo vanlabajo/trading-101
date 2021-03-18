@@ -4,7 +4,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TradingStrategies;
-using TradingStrategies.Constants;
 
 namespace ConsoleApp
 {
@@ -15,21 +14,21 @@ namespace ConsoleApp
         private readonly AppSettings appSettings;
         private readonly IMarketData marketData;
         private readonly IBroker broker;
-        private readonly ILogger<Strategy102> strategyLogger;
+        private readonly ILongStrategy longStrategy;
 
         public ConsoleHostedService(ILogger<ConsoleHostedService> logger,
             IHostApplicationLifetime appLifetime,
             AppSettings appSettings,
             IMarketData marketData,
             IBroker broker,
-            ILogger<Strategy102> strategyLogger)
+            ILongStrategy longStrategy)
         {
             this.logger = logger;
             this.appLifetime = appLifetime;
             this.appSettings = appSettings;
             this.marketData = marketData;
             this.broker = broker;
-            this.strategyLogger = strategyLogger;
+            this.longStrategy = longStrategy;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -46,36 +45,36 @@ namespace ConsoleApp
                         if (capital > 500) capital = 500;
                         logger.LogInformation("{0} - available funds in broker account.", capital);
 
+                        var availableFunds = capital;
+
                         foreach (var stock in appSettings.StockPicks)
                         {
                             try
                             {
-                                var strategy = new Strategy102(stock, strategyLogger, marketData);
-                                await strategy.GetMarketData();
-                                var quote = strategy.GetQuote();
+                                var lastPrice = await broker.GetLastPriceAsync(stock);
+                                logger.LogInformation("{0} - Last Price: {1}", stock, lastPrice);
 
-                                if (strategy.IsBullish())
+                                if (longStrategy.IsBullish(stock, lastPrice))
                                 {
-                                    var entryPrice = quote.Close + 0.02m;
-                                    var stopLoss = entryPrice - 0.2m;
-                                    var positionSize = PositionSizing.GetPositionSize(capital, 1m, 1.5m, entryPrice, stopLoss);
+                                    var stopLoss = lastPrice - 0.2m;
+                                    var positionSize = PositionSizing.GetPositionSize(capital, 1m, 1.5m, lastPrice, stopLoss);
 
-                                    if (strategy.ShouldTrade(positionSize.TargetProfit))
+                                    if (longStrategy.ShouldTrade(stock, positionSize.TargetProfit))
                                     {
-                                        var fundsNeeded = entryPrice * positionSize.Quantity;
-                                        if (capital >= fundsNeeded)
+                                        var fundsNeeded = lastPrice * positionSize.Quantity;
+                                        if (availableFunds >= fundsNeeded)
                                         {
                                             try
                                             {
-                                                await broker.PlaceBracketOrderAsync(stock, "BUY", positionSize.Quantity, entryPrice, positionSize.TargetProfit);
+                                                await broker.PlaceBracketOrderAsync(stock, "BUY", positionSize.Quantity, lastPrice, positionSize.TargetProfit);
                                             }
                                             catch (Exception) { }
 
-                                            logger.LogInformation("{0} - buying {1} for {2}.", stock, positionSize.Quantity, entryPrice);
-                                            capital -= fundsNeeded;
-                                            logger.LogInformation("{0} - available funds in broker account.", capital);
+                                            logger.LogInformation("{0} - buying {1} for {2}, selling for {3}.", stock, positionSize.Quantity, lastPrice, positionSize.TargetProfit);
+                                            availableFunds -= fundsNeeded;
+                                            logger.LogInformation("{0} - available funds in broker account.", availableFunds);
                                         }
-                                        else logger.LogError("{0} available funds is less than the needed {1}", capital, fundsNeeded);
+                                        else logger.LogError("{0} available funds is less than the needed {1}", availableFunds, fundsNeeded);
                                     }
                                 }
                             }

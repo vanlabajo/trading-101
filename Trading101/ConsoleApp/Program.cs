@@ -54,6 +54,8 @@ namespace ConsoleApp
                         return new AvMarketData(appSettings.AvApiKey, factory);
                     });
 
+                    services.AddTransient<ILongStrategy, LongStrategy103>();
+
                     services.AddHostedService<ConsoleHostedService>();
                 })
                 .RunConsoleAsync();
