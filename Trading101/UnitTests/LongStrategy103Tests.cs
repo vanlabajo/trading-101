@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
 using System;
+using System.Threading.Tasks;
 using TradingStrategies;
 using Xunit;
 
@@ -9,7 +10,7 @@ namespace UnitTests
     public class LongStrategy103Tests
     {
         [Fact]
-        public void IsBullish()
+        public async Task IsBullish()
         {
             var symbol = "MSFT";
             var loggerMock = new Mock<ILogger<LongStrategy103>>();
@@ -24,6 +25,8 @@ namespace UnitTests
             marketDataMock.Setup(mock => mock.GetLatestSmaAsync(symbol, 200)).ReturnsAsync(99.6m); // Below the market price
 
             var strategy = new LongStrategy103(loggerMock.Object, marketDataMock.Object);
+
+            await strategy.GetMarketDataAsync(symbol);
 
             var isBullish = strategy.IsBullish(symbol, 100m);
             Assert.True(isBullish);
@@ -42,7 +45,7 @@ namespace UnitTests
         [InlineData(99.9, 101, 102, 103, false)] // Strong bearish because 3 indicators are above the market price
         [InlineData(99.9, 99.8, 102, 103, false)] // Weak bearish because only 2 indicators are above the market price
         [InlineData(99.9, 98.7, 98.9, 103, true)] // Strong bullish because 3 indicators are above the market price
-        public void IsBullishTheory(decimal ema9, decimal ema20, decimal sma50, decimal sma200, bool expected)
+        public async Task IsBullishTheory(decimal ema9, decimal ema20, decimal sma50, decimal sma200, bool expected)
         {
             var symbol = "MSFT";
             var loggerMock = new Mock<ILogger<LongStrategy103>>();
@@ -58,12 +61,14 @@ namespace UnitTests
 
             var strategy = new LongStrategy103(loggerMock.Object, marketDataMock.Object);
 
+            await strategy.GetMarketDataAsync(symbol);
+
             var isBullish = strategy.IsBullish(symbol, 100m);
             Assert.Equal(expected, isBullish);
         }
 
         [Fact]
-        public void ShouldLongTrade()
+        public async Task ShouldLongTrade()
         {
             var symbol = "MSFT";
             var loggerMock = new Mock<ILogger<LongStrategy103>>();
@@ -79,6 +84,8 @@ namespace UnitTests
 
             var strategy = new LongStrategy103(loggerMock.Object, marketDataMock.Object);
 
+            await strategy.GetMarketDataAsync(symbol);
+
             var isBullish = strategy.IsBullish(symbol, 100m);
             Assert.True(isBullish);
 
@@ -92,14 +99,13 @@ namespace UnitTests
         [InlineData(53.1, 53.4, false)]
         [InlineData(22.4, 22.4, true)]
         [InlineData(22.3, 22.4, false)]
-        public void ShouldLongTradeTheory(decimal highestHigh, decimal targetProfit, bool expected)
+        public async Task ShouldLongTradeTheory(decimal highestHigh, decimal targetProfit, bool expected)
         {
             var symbol = "MSFT";
             var loggerMock = new Mock<ILogger<LongStrategy103>>();
             var marketDataMock = new Mock<IMarketData>();
 
             loggerMock.Setup(mock => mock.Log(LogLevel.Information, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()));
-
 
             marketDataMock.Setup(mock => mock.GetLatestEmaAsync(symbol, 9)).ReturnsAsync(99.9m); // Below the market price
             marketDataMock.Setup(mock => mock.GetLatestEmaAsync(symbol, 20)).ReturnsAsync(99.8m); // Below the market price
@@ -108,6 +114,8 @@ namespace UnitTests
             marketDataMock.Setup(mock => mock.GetIntradayHighestHighLowestLowAsync(symbol)).ReturnsAsync((highestHigh, 98m));
 
             var strategy = new LongStrategy103(loggerMock.Object, marketDataMock.Object);
+
+            await strategy.GetMarketDataAsync(symbol);
 
             var isBullish = strategy.IsBullish(symbol, 100m);
             Assert.True(isBullish);

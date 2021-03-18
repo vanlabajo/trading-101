@@ -54,6 +54,8 @@ namespace ConsoleApp
                                 var lastPrice = await broker.GetLastPriceAsync(stock);
                                 logger.LogInformation("{0} - Last Price: {1}", stock, lastPrice);
 
+                                await longStrategy.GetMarketDataAsync(stock);
+
                                 if (longStrategy.IsBullish(stock, lastPrice))
                                 {
                                     var stopLoss = lastPrice - 0.2m;
