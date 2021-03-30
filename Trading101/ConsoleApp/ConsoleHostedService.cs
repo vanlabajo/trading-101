@@ -41,11 +41,11 @@ namespace ConsoleApp
                 {
                     try
                     {
-                        var capital = await broker.GetAvailableFundsAsync();
-                        if (capital > 500) capital = 500;
-                        logger.LogInformation("{0} - available funds in broker account.", capital);
+                        var capital = appSettings.Capital;
+                        logger.LogInformation("{0} - capital for position sizing.", capital);
 
-                        var availableFunds = capital;
+                        var availableFunds = await broker.GetAvailableFundsAsync();
+                        logger.LogInformation("{0} - available funds in broker account.", availableFunds);
 
                         foreach (var stock in appSettings.StockPicks)
                         {

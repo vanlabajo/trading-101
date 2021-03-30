@@ -4,6 +4,7 @@ namespace ConsoleApp
 {
     public class AppSettings
     {
+        public decimal Capital { get; set; }
         public List<string> StockPicks { get; set; }
         public TwsSettings TwsSettings { get; set; }
         public string AvApiKey { get; set; }
