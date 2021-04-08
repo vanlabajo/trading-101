@@ -40,11 +40,15 @@ namespace TradingStrategies.Wrappers
 
             await retryPolicy.ExecuteAsync(async () =>
             {
-                var intraday = await stocksClient.GetTimeSeriesAsync(symbol, Interval.Min5);
+                var intraday = await stocksClient.GetTimeSeriesAsync(symbol, Interval.Min60);
                 if (intraday?.DataPoints.Count > 0)
                 {
-                    highestHigh = intraday.DataPoints.Select(dp => dp.HighestPrice).Max();
-                    lowestLow = intraday.DataPoints.Select(dp => dp.LowestPrice).Min();
+                    var dp = intraday.DataPoints
+                        .Where(dp => dp.Time.Date >= DateTime.Now.AddDays(-7).Date)
+                        .ToList();
+
+                    highestHigh = dp.Select(dp => dp.HighestPrice).Max();
+                    lowestLow = dp.Select(dp => dp.LowestPrice).Min();
                 }
             });
 
